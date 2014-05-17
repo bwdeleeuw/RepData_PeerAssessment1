@@ -11,9 +11,9 @@ library(zoo)
 library(lattice)
 ```
 
-Unzip and read the data, converting the column to their correct types.
+Unzip and read the data
 
-All processing is done in the read.csv
+All processing is done in the read.csv function, converting the column to their correct data types.
 
 ```{r}
 unzip("activity.zip")
@@ -30,7 +30,7 @@ totalSteps <- aggregate(list(steps = data$steps), by=list(date = data$date), FUN
 qplot(date, weight = steps, data = totalSteps, geom = "histogram", binwidth=1)
 ```
 
-The average number of steps per day and the median of the number of steps per day are:
+The mean number of steps per day and the median of the number of steps per day are:
 
 ```{r}
 mean(totalSteps$steps)
@@ -44,10 +44,15 @@ Create a list that contains the average number of steps per interval
 
 ```{r}
 dailyActivity <- aggregate(list(steps = data$steps), by=list(interval = data$interval), FUN=mean, na.rm=TRUE)
+```
+
+Create a time series plot of the average number of steps (across all days), set off against the interval.
+
+```{r}
 xyplot(steps ~ interval, data = dailyActivity, type='l', xlab="Interval", ylab="Number of steps")
 ```
 
-The interval with the maximum number of steps is
+The interval with the maximum (average) number of steps is
 
 ```{r}
 dailyActivity[which(dailyActivity[,"steps"] == max(dailyActivity$steps)),"interval"]
@@ -61,14 +66,18 @@ Report on the number of rows with NA
 sum(is.na(data))
 ```
 
-Fill in the missing data with the average number of steps for that interval. The new data frame is called fixedData
+Fill in the missing data with the average number of steps for that interval. 
+ - Calculate the average number of steps per interval.
+ - For any value that is NA, fill in the calculated number for that interval.
+ - Using the function na.aggregate from the zoo library.
+The new data frame is called fixedData
 
 ```{r}
 fixedData <- data
 fixedData$steps <- na.aggregate(data$steps, by=data$interval, FUN=mean)
 ```
 
-Create a list of the total steps per day and then display the histogram.
+Create a list of the total steps per day and then display the histogram. We are using the fixedData dataframe this time, so the missing values have been imputed.
 
 ```{r}
 totalSteps <- aggregate(list(steps = fixedData$steps), by=list(date = fixedData$date), FUN=sum, na.rm=TRUE)
@@ -93,7 +102,7 @@ fixedData$dayType = as.factor(weekdays(fixedData$date))
 levels(fixedData$dayType) <- c("weekday","weekday","weekend","weekend","weekday","weekday","weekday")
 ```
 
-Create a list of the total steps per day and display the data in a panel plot, ordered by interval to get clean lines
+Create a list of the total steps per day and display the data in a panel plot, comparing the average number of steps per interval across weekdays and weekends.
 
 ```{r}
 dailyActivity <- aggregate(list(steps = fixedData$steps), by=list(interval = fixedData$interval, dayType = fixedData$dayType), FUN=mean, na.rm=TRUE)
